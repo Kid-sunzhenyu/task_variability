@@ -9,7 +9,7 @@ csubs = subs(commons==1);
 nsubs = sum(commons);
 
 mpath = '/zfs/musc/david/HCP4variability'; % change to ur path
-taskn = 'WM'; % 'LANGUAGE' % 'REST1'
+taskn = 'WM'; % 'LANGUAGE' 
 sess = {'LR', 'RL'};
 proc = '12mr_gsr';
 

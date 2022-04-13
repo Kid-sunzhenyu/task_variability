@@ -9,7 +9,8 @@ csubs = subs(commons==1);
 nsubs = sum(commons);
 
 mpath = '/zfs/musc/david/HCP4variability'; % change to ur path
-taskn = 'WM'; % 'LANGUAGE' % 'REST1'
+taskn = 'REST1'; % 'REST2' 
+rest_range = 1:300; % set REST frame range as 1:300 to mimic task length
 sess = {'LR', 'RL'};
 proc = '12mr_gsr';
 
@@ -36,7 +37,7 @@ for i = 1:nsess %length(subs)
         filename = [DataPath '/' tasksess '_Atlas_hp200_s4_bpss_' proc '.dtseries.nii'];
         
         chdr = cifti_read(filename);
-        alldata = single(chdr.cdata);       
+        alldata = single(chdr.cdata(:,rest_range));       
         Lsurfdata = single(zeros(32492,size(alldata,2)));
         Lsurfdata(Lvertlist,:) = alldata([Lstart:Lcount],:);
         Rsurfdata = single(zeros(32492,size(alldata,2)));
@@ -130,4 +131,4 @@ for s = 1:nsubs
     filename = ['InterSubject_Variability_' sub '_' taskn '_' proc];
     Func_write_func_gifti_32k(filename, indimap(:,s), subpath, Lhdr, Rhdr)
 end
-save([OutPath '/InterSubject_Variability_session_' taskn '_' proc '_LR.mat'], 'indimap')
+save([OutPath '/AllIndividuals_InterSubject_Variability_' taskn '_' proc '_LR.mat'], 'indimap')
