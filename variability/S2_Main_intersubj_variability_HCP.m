@@ -3,8 +3,8 @@ addpath(genpath('/zfs/musc/david/codes/tools/'))
 addpath(genpath('/zfs/musc/david/codes/matlab'))
 load fsLR_32k_config.mat
 
-subs = importdata('list_100Unrelated.txt');
-commons = importdata('list_common_subs.txt');
+subs = importdata('../lists/list_100Unrelated.txt');
+commons = importdata('../lists/list_common_subs.txt');
 csubs = subs(commons==1);
 nsubs = sum(commons);
 
@@ -62,28 +62,36 @@ for i = 1:nsess %length(subs)
             count = count + 1;
             tmp = my_matcorr(squeeze(Rmat(:,:,m))', squeeze(Rmat(:,:,n))');
             tmp(isnan(tmp)) = 0;
-            AveRmat = AveRmat + tmp';
+            AveRmat(m,n,:) = tmp;
         end
     end
     count
-    InterVariance(i, :) = 1-AveRmat/count;
-    %save_mgh(IntraVariance(s,:), [OutPath '/lh.' sub '_intravariance_fs4.mgh'],eye(4))
+    tmp = 1-AveRmat;
+    if i == 1
+        AllAveRmat = tmp;
+    else
+        AllAveRmat = AllAveRmat + tmp;
+    end
 end
-meanInterVariance = mean(InterVariance);
-save([OutPath '/InterVariance_' taskn '_' proc '_LR.mat'], 'InterVariance', 'meanInterVariance')
-
+meanAveRmat = AllAveRmat/i;
+save([OutPath '/InterVariacne_' taskn '_' proc '_subxsubxmap_LR.mat'], 'meanAveRmat')
+meanInterVariance = zeros(nLR,1);
+for n = 1:nLR
+    tmp = squeeze(meanAveRmat(:,:,n));
+    tmps = tmp(tril(true(nsubs),-1));
+    meanInterVariance(n) = nanmean(tmps);
+end
 filename = ['InterVariance_' taskn '_' proc];
 Func_write_func_gifti_32k(filename, meanInterVariance, OutPath, Lhdr, Rhdr)
-
+  
 % Regress Out
 Variability_norm = zeros(nsess,nLR);
 Variability = zeros(nsess,nLR);
-
 load([OutPath '/IntraVariance_' taskn '_' proc '_LR.mat'])
+Intra_value = meanIntraVariance;
+X = [Intra_value', ones(nLR,1)];
 for i = 1:nsess
-    Intra_value = meanIntraVariance;
     Inter = InterVariance(i,:)';
-    X = [Intra_value', ones(nLR,1)];
     beta = pinv(X)*Inter;
     tmp = Inter - X*beta;
     Variability_norm(i,:) = tmp;
@@ -98,7 +106,6 @@ meanVariability = mean(Variability_norm);
 filename = ['InterSubject_Variability_norm_' taskn '_' proc];
 Func_write_func_gifti_32k(filename, meanVariability, OutPath, Lhdr, Rhdr)
 
-
 % variability
 meanVariability = mean(Variability);
 filename = ['InterSubject_Variability_norm_' taskn '_' proc];
@@ -110,3 +117,17 @@ Func_write_func_gifti_32k(filename, meanVariability, OutPath, Lhdr, Rhdr)
 % Rhdr.cdata = 0*Rhdr.cdata;
 % Rhdr.cdata(Rvertlist) = meanVariability(Rstart:end)';
 % save(Rhdr, [OutPath '/InterSubject_Variability_' taskn '_' proc '_R.func.gii'])
+
+% individual's variability map
+subpath = [OutPath '/subjects'];
+mkdir(subpath)
+indimap = zeros(nLR, nsubs);
+for s = 1:nsubs
+    sub = num2str(csubs(s));
+    Inter = nanmean(squeeze(meanAveRmat(:,s,:)))'; % intervariance for each individual
+    beta = pinv(X)*Inter;
+    indimap(:, s) = Inter - X(:,1:end-1)*beta(1:end-1);
+    filename = ['InterSubject_Variability_' sub '_' taskn '_' proc];
+    Func_write_func_gifti_32k(filename, indimap(:,s), subpath, Lhdr, Rhdr)
+end
+save([OutPath '/AllIndividuals_InterSubject_Variability_' taskn '_' proc '_LR.mat'], 'indimap')
