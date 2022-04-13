@@ -3,8 +3,8 @@ addpath(genpath('/zfs/musc/david/codes/tools/')) % for cifti-matlab
 addpath(genpath('/zfs/musc/david/codes/matlab')) % for my own codes
 
 load fsLR_32k_config.mat
-subs = importdata('list_100Unrelated.txt');
-commons = importdata('list_common_subs.txt');
+subs = importdata('../lists/list_100Unrelated.txt');
+commons = importdata('../lists/list_common_subs.txt');
 csubs = subs(commons==1);
 nsubs = sum(commons);
 
