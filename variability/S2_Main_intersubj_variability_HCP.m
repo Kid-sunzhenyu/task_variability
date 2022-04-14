@@ -1,6 +1,6 @@
 clear,clc;
 addpath(genpath('/zfs/musc/david/codes/tools/'))
-addpath(genpath('/zfs/musc/david/codes/matlab'))
+addpath(genpath('../lib'))
 load fsLR_32k_config.mat
 
 subs = importdata('../lists/list_100Unrelated.txt');

@@ -1,6 +1,6 @@
 clear,clc;
 addpath(genpath('/zfs/musc/david/codes/tools/')) % for cifti-matlab
-addpath(genpath('/zfs/musc/david/codes/matlab')) % for my own codes
+addpath(genpath('../lib')) % for my own codes
 
 load fsLR_32k_config.mat
 subs = importdata('../lists/list_100Unrelated.txt');
