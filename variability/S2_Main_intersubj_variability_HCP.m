@@ -1,22 +1,23 @@
 clear,clc;
-addpath(genpath('/zfs/musc/david/codes/tools/'))
-addpath(genpath('../lib'))
+addpath(genpath('/mnt/Task_variability/cifti-matlab'))
+addpath(genpath('lib'))
 load fsLR_32k_config.mat
 
-subs = importdata('../lists/list_100Unrelated.txt');
-commons = importdata('../lists/list_common_subs.txt');
+subs = importdata('lists/list_82.txt');
+commons = importdata('lists/list_common_82.txt');
 csubs = subs(commons==1);
 nsubs = sum(commons);
 
-mpath = '/zfs/musc/david/HCP4variability'; % change to ur path
-taskn = 'WM'; % 'LANGUAGE' 
+taskn = 'LANGUAGE'; % 'LANGUAGE' 
+mpath = ['/mnt/HCP_TASK_Output/Task_' taskn]; % change to ur path
 sess = {'LR', 'RL'};
 proc = '12mr_gsr';
 
-Lhdr = gifti('../rois/L.fslr_downsample_900mesh_parcellation_sm1.func.gii');
+
+Lhdr = gifti('rois/L.fslr_downsample_900mesh_parcellation_sm1.func.gii');
 Lrois = Lhdr.cdata;
 maxLrois = max(Lrois);
-Rhdr = gifti('../rois/R.fslr_downsample_900mesh_parcellation_sm1.func.gii');
+Rhdr = gifti('rois/R.fslr_downsample_900mesh_parcellation_sm1.func.gii');
 Rrois = Rhdr.cdata;
 maxRrois = max(Rrois);
 
@@ -32,8 +33,8 @@ for i = 1:nsess %length(subs)
 	    s
         sub = num2str(csubs(s));
         tasksess = ['tfMRI_' taskn '_' sess{i}];
-        DataPath = [mpath '/data/' sub '/' tasksess];
-        filename = [DataPath '/' tasksess '_Atlas_hp200_s4_bpss_' proc '.dtseries.nii'];
+        DataPath = [mpath '/' sub '/' tasksess];
+        filename = [DataPath '/' tasksess '_Atlas_bpss_' proc '.dtseries.nii'];
         
         chdr = cifti_read(filename);
         alldata = single(chdr.cdata);       
@@ -65,7 +66,7 @@ for i = 1:nsess %length(subs)
             AveRmat(m,n,:) = tmp;
         end
     end
-    count
+    count;
     tmp = 1-AveRmat;
     if i == 1
         AllAveRmat = tmp;
@@ -73,8 +74,19 @@ for i = 1:nsess %length(subs)
         AllAveRmat = AllAveRmat + tmp;
     end
 end
+
+for i = 1:nsess 
+    for s = 1:nLR
+        a  = AllAveRmat(:,:,s,i);
+        b = triu(a,1);
+        c = find(b ~=0);
+        d  = mean(a(c));
+        InterVariance(i,s) = d;
+    end
+end
+
 meanAveRmat = AllAveRmat/i;
-save([OutPath '/InterVariacne_' taskn '_' proc '_subxsubxmap_LR.mat'], 'meanAveRmat')
+save([OutPath '/InterVariance_' taskn '_' proc '_subxsubxmap_LR.mat'], 'meanAveRmat')
 meanInterVariance = zeros(nLR,1);
 for n = 1:nLR
     tmp = squeeze(meanAveRmat(:,:,n));
@@ -87,7 +99,7 @@ Func_write_func_gifti_32k(filename, meanInterVariance, OutPath, Lhdr, Rhdr)
 % Regress Out
 Variability_norm = zeros(nsess,nLR);
 Variability = zeros(nsess,nLR);
-load([OutPath '/IntraVariance_' taskn '_' proc '_LR.mat'])
+load([OutPath '/IntraVariance_' taskn '_12mr_LR.mat'])
 Intra_value = meanIntraVariance;
 X = [Intra_value', ones(nLR,1)];
 for i = 1:nsess

@@ -1,26 +1,25 @@
 clear,clc
-addpath(genpath('/zfs/musc/david/codes/tools/cifti-matlab'));
+addpath(genpath('/mnt/Task_variability/cifti-matlab'));
 
 taskn = 'LANGUAGE';
 
-OrigPath = ['/zfs/musc/Weigang/HCP_Data/HCP_3T_' taskn '/Preprocessing/'];
+OrigPath = ['/mnt/HCP_DATASET/HCP_TASK_' taskn];
 
-SIDs = textread('list_100Unrelated.txt','%s');
-
+SIDs = textscan('lists/list_82.txt','%s');
+SIDs = importdata('lists/list_82.txt');
 segNum = 2;
 
 sess = {'LR', 'RL'};
 
 for s = 1:length(SIDs)
-    sub = SIDs{s};
+    sub = SIDs(s);
     for i = 1:segNum
         seg = sess{i};
         disp([sub ':' seg])
         runname = ['tfMRI_' taskn '_' seg];
-        
-        InPath = [OrigPath sub '/MNINonLinear/Results/' runname];
+        InPath = [OrigPath '/' num2str(sub) '/' num2str(sub) '/MNINonLinear/Results/' runname];
         if exist([InPath '/' runname '_Atlas.dtseries.nii'])~=0
-	       OutPath = ['/zfs/musc/david/HCP4variability/data/' sub '/' runname];
+	       OutPath = ['/mnt/HCP_TASK_Output/Task_' taskn '/' num2str(sub) '/' runname];
            mkdir(OutPath)	
            cifti = cifti_read([InPath '/' runname '_Atlas.dtseries.nii']);        
 

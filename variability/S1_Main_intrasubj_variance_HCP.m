@@ -1,28 +1,27 @@
 clear,clc;
-addpath(genpath('/zfs/musc/david/codes/tools/')) % for cifti-matlab
-addpath(genpath('../lib')) % for my own codes
+addpath(genpath('/mnt/Task_variability/cifti-matlab')) % for cifti-matlab
+addpath(genpath('lib')) % for my own codes
 
 load fsLR_32k_config.mat
-subs = importdata('../lists/list_100Unrelated.txt');
-commons = importdata('../lists/list_common_subs.txt');
+subs = importdata('lists/list_82.txt');
+commons = importdata('lists/list_common_82.txt');
 csubs = subs(commons==1);
 nsubs = sum(commons);
 
-mpath = '/zfs/musc/david/HCP4variability'; % change to ur path
-taskn = 'LANGUAGE' % change to other tasks or rest
+taskn = 'LANGUAGE'; % change to other tasks or rest
+mpath = ['/mnt/HCP_TASK_Output/Task_' taskn]; % change to ur path
 sess = {'LR', 'RL'};
 proc = '12mr';
 
-Lhdr = gifti('../rois/L.fslr_downsample_900mesh_parcellation_sm1.func.gii');
+Lhdr = gifti('rois/L.fslr_downsample_900mesh_parcellation_sm1.func.gii');
 Lrois = Lhdr.cdata;
 maxLrois = max(Lrois);
-Rhdr = gifti('../rois/R.fslr_downsample_900mesh_parcellation_sm1.func.gii');
+Rhdr = gifti('rois/R.fslr_downsample_900mesh_parcellation_sm1.func.gii');
 Rrois = Rhdr.cdata;
 maxRrois = max(Rrois);
 
 OutPath = [mpath '/results/' taskn];
 mkdir(OutPath)
-
 nLR = 59412; % L = 29696; R = 29716
 
 nsess = 2;
@@ -33,8 +32,8 @@ for s = 1:nsubs %length(subs)
     for i = 1:nsess
 	    i
         tasksess = ['tfMRI_' taskn '_' sess{i}];
-        DataPath = [mpath '/data/' sub '/' tasksess];
-        filename = [DataPath '/' tasksess '_Atlas_hp200_s4_bpss_' proc '.dtseries.nii'];
+        DataPath = [mpath '/' sub '/' tasksess];
+        filename = [DataPath '/' tasksess '_Atlas_bpss_' proc '.dtseries.nii'];
         
         chdr = cifti_read(filename);
         alldata = single(chdr.cdata);       
@@ -71,7 +70,7 @@ for s = 1:nsubs %length(subs)
             AveRmat = AveRmat + tmp';%diag(tmp);
         end
     end
-    count
+    count;
     IntraVariance(s, :) = 1 - AveRmat/count;
     %save_mgh(IntraVariance(s,:), [OutPath '/lh.' sub '_intravariance_fs4.mgh'],eye(4))
 end
