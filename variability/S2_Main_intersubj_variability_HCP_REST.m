@@ -28,7 +28,7 @@ mkdir(OutPath)
 nLR = 59412; % L = 29696; R = 29716
 nsess = 2;
 InterVariance = zeros(nsess, nLR);
-
+AllAveRmat =zeros(nsubs,nsubs,nLR,nsess);
 for i = 1:nsess %length(subs)
     Rmat = zeros(nLR, 1483, nsubs);
     for s = 1:nsubs
@@ -70,11 +70,8 @@ for i = 1:nsess %length(subs)
     end
     count
     tmp = 1-AveRmat;
-    if i == 1
-        AllAveRmat = tmp;
-    else
-        AllAveRmat = AllAveRmat + tmp;
-    end
+
+    AllAveRmat(:,:,:,i) = tmp;
 end
 
 for i = 1:nsess 
@@ -87,7 +84,7 @@ for i = 1:nsess
     end
 end
 
-meanAveRmat = AllAveRmat/i;
+meanAveRmat = mean(AllAveRmat,4);
 save([OutPath '/InterVariance_' taskn '_' proc '_subxsubxmap_LR.mat'], 'meanAveRmat')
 meanInterVariance = zeros(nLR,1);
 for n = 1:nLR
@@ -122,7 +119,7 @@ Func_write_func_gifti_32k(filename, meanVariability, OutPath, Lhdr, Rhdr)
 
 % variability
 meanVariability = mean(Variability);
-filename = ['InterSubject_Variability_norm_' taskn '_' proc];
+filename = ['InterSubject_Variability_' taskn '_' proc];
 Func_write_func_gifti_32k(filename, meanVariability, OutPath, Lhdr, Rhdr)
 
 % meanVariability = mean(Variability);
